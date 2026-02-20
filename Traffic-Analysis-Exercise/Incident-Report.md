@@ -1,7 +1,7 @@
 # Incident Report
 
 ## Executive Summary 
-On Tuesday, July 30^th^, 2024 at approximately 2:40 UTC, a Windows system used by user ccollier was infected with STRRAT malware, which promptly established command-and-control communication with an external system to exfiltrate data.
+On Tuesday, July 30th, 2024 at approximately 2:40 UTC, a Windows system used by user ccollier was infected with STRRAT malware, which promptly established command-and-control communication with an external system to exfiltrate data.
 
 <table>
   <tr>

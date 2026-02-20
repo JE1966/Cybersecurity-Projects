@@ -87,7 +87,7 @@ This information was then used to set up a TCP connection to the attacker's syst
 ![alt text](Images/image-6.png)
 ***Fig. 7.** TCP stream between host and attacker. The pings contained some encoded strings (one highlighted as an example).*
 
-From the characters used, the lengths being multiples of 4, and the use of padding characters (=) in some instances, my first assumption was that these strings were Base64 encoded. Once this was confirmed for the first few strings, I processed the file using a [Python script](base64decode.py) to decode all distinct encoded strings.
+From the characters used, the lengths being multiples of 4, and the use of padding characters (=) in some instances, my first assumption was that these strings were Base64 encoded. Once this was confirmed for the first few strings, I processed the file using a [Python script](Script/base64decode.py) to decode all distinct encoded strings.
  
 ***Script 1.** Script to process TCP traffic file, extract base64 encoded strings, and decode them*
 
