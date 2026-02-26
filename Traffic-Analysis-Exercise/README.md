@@ -21,7 +21,7 @@ To ensure environment safety, the analysis was conducted within a secure Remnux 
 
 Lets first display the properties of the entire pcap file in Wireshark.
 
-![alt text](Images/image-1.png){width=70%}
+![alt text](Images/image-1.png)
 ***Fig. 1.** Capture file properties*
 
 **File Size:** 11 MB
@@ -39,7 +39,7 @@ Lets first display the properties of the entire pcap file in Wireshark.
 
 To gather more information on the host system, I examined the list of resolved addresses in Wireshark and checked if any local IPs were included.
 
-![alt text](Images/image-3.png){width=70%}
+![alt text](Images/image-3.png)
 
 ***Fig. 2.** Resolved Addresses in Wireshark*
 
