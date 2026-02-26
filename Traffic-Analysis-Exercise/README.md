@@ -1,13 +1,13 @@
 # Malware Forensic Investigation Through Traffic Analysis
 
-This project involved a comprehensive investigation of malicious network activity observed in a packet capture file. The pcap file in question was sourced from https://www.malware-traffic-analysis.net/2024/07/30/index.html, from the traffic analysis exercise titled, "You Dirty Rat!" (note that the pcap file has not been included in this repo). The objective was to reconstruct the attack lifecycle and identify the indicators of compromise.
+This project involved a comprehensive investigation of malicious network activity observed in a packet capture file. The pcap file in question was sourced from https://www.malware-traffic-analysis.net/2024/07/30/index.html, from the traffic analysis exercise titled, "You Dirty Rat!" (note that the pcap file has not been included in this repo but can be obtained from the given domain). The objective was to reconstruct the attack lifecycle and identify the indicators of compromise.
 
 ## Provided Environment Data:
 
-**LAN segment range:**  172.16.1.0/24 (172.16.1.0 through 172.16.1.255)
-**Domain:**  wiresharkworkshop.online
-**Domain controller:**  172.16.1.4 - WIRESHARK-WS-DC
-**LAN segment gateway:**  172.16.1.1
+**LAN segment range:**  172.16.1.0/24 (172.16.1.0 through 172.16.1.255)\
+**Domain:**  wiresharkworkshop.online\
+**Domain controller:**  172.16.1.4 - WIRESHARK-WS-DC\
+**LAN segment gateway:**  172.16.1.1\
 **LAN segment broadcast address:**  172.16.1.255
 
 
@@ -26,11 +26,11 @@ Lets first display the properties of the entire pcap file in Wireshark.
 
 **File Size:** 11 MB
 
-**Hash (SHA256):** c48854c24223cf7b4e9880ea72a21a877e4138e4ce36df7b7656e5c6c4043f68
+**Hash (SHA256):** c48854c24223cf7b4e9880ea72a21a877e4138e4ce36df7b7656e5c6c4043f68\
 **Hash (SHA1):** 2b2837c4ef1c08aae8fed3ce5026638bfd5aa858
 
-**First packet:** 2024-07-29 22:38:48
-**Last packet:** 2024-07-29 22:48:34
+**First packet:** 2024-07-29 22:38:48\
+**Last packet:** 2024-07-29 22:48:34\
 **Elapsed:** 00:09:45
 
 **Captured Packets:** 11562
@@ -43,7 +43,7 @@ To gather more information on the host system, I examined the list of resolved a
 
 ***Fig. 2.** Resolved Addresses in Wireshark*
 
-From the LAN segment data provided for the exercise, I knew that 172.16.1.4 is the address of a domain controller in the network. The other IP address (172.16.1.66) must hav been the host system, a desktop with the hostname DESKTOP-SKBR25F. 
+From the LAN segment data provided for the exercise, I knew that 172.16.1.4 is the address of a domain controller in the network. The other IP address (172.16.1.66) must have been the host system, a desktop with the hostname DESKTOP-SKBR25F. 
 
 Inspection of the ethernet headers of packets to or from the desktop revealed the MAC address of the device (00:1e:64:ec:f3:08).
 
@@ -61,9 +61,9 @@ To find a user account name, there are a couple of approaches that can be taken 
 
 At this point, I had significant information on the host system.
 
-**Host name:** DESKTOP-SKBR25F
-**IP address:** 172.16.1.66
-**MAC address:** 00:1e:64:ec:f3:08
+**Host name:** DESKTOP-SKBR25F\
+**IP address:** 172.16.1.66\
+**MAC address:** 00:1e:64:ec:f3:08\
 **User:** ccollier
 
 ## Network Traffic Analysis
@@ -85,9 +85,9 @@ Packet 9114 was also of some interest. Zui has flagged it as a call to ip-api.co
 This information was then used to set up a TCP connection to the attacker's system. Following the TCP stream for any of the subsequent packets identified by Zui revealed suspicious traffic between the host and the flagged IP.
 
 ![alt text](Images/image-6.png)
-***Fig. 7.** TCP stream between host and attacker. The pings contained some encoded strings (one highlighted as an example).*
+***Fig. 7.** TCP stream between host and attacker. The pings contained some encoded substrings (one highlighted as an example).*
 
-From the characters used, the lengths being multiples of 4, and the use of padding characters (=) in some instances, my first assumption was that these strings were Base64 encoded. Once this was confirmed for the first few strings, I processed the file using a [Python script](Script/base64decode.py) to decode all distinct encoded strings.
+Each string started with a prefix indicating STRRAT pings and system information. Additionally, some unreadable substrings were present within each larger string. From the characters used, the lengths being multiples of 4, and the use of padding characters (=) in some instances, my first assumption was that these substrings were Base64 encoded. Once this was confirmed for the first few examples, I processed the file using a [Python script](Script/base64decode.py) to extract and decode all distinct encoded substrings.
  
 ***Script 1.** Script to process TCP traffic file, extract base64 encoded strings, and decode them*
 
@@ -143,10 +143,10 @@ At this point, several indicators of malicious activity on the affected system a
 
 Scrolling through the filtered packets revealed 2 instances of TLS handshakes followed by numerous packets of application data. The domains accessed were Github and a Maven repo. A check through the conversation statistics in Wireshark also confirmed that these domains were responsible for the largest volumes of data traffic. Additionally, both domains were accessed seconds before the malicious traffic started. 
 
-**Github**
+**Github**\
 ***IPs:*** 140.82.113.3, 185.199.110.133
 
-**Maven**
+**Maven**\
 ***IP:*** 199.232.196.209
 
 Github and Maven are common platforms for developers and are not inherently malicious, but an attacker can still use these platforms to distribute malicious content or files. This makes it a possible attack vector for this incident, and the STRRAT could have been downloaded inadvertently from one of these domains.
@@ -163,6 +163,6 @@ A full incident report is provided [here](Incident-Report.md).
 
 ### *Indicators of Compromise*
 
-- (critical) TCP traffic from the STRRAT to 141.98.10.69:12132 enumerating the host system.
+- (critical) TCP traffic from the STRRAT to 141.98.10.79:12132 enumerating the host system.
 - Large application data transfers from Github and Maven repos shortly before suspicious TCP traffic.
 - External IP lookup between the above application data transfers and suspicious TCP traffic.
