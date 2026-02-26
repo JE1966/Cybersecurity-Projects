@@ -21,7 +21,7 @@ To ensure environment safety, the analysis was conducted within a secure Remnux 
 
 Lets first display the properties of the entire pcap file in Wireshark.
 
-![alt text](Images/image-1.png)
+![alt text](Images/image-1.png)\
 ***Fig. 1.** Capture file properties*
 
 **File Size:** 11 MB
@@ -39,15 +39,14 @@ Lets first display the properties of the entire pcap file in Wireshark.
 
 To gather more information on the host system, I examined the list of resolved addresses in Wireshark and checked if any local IPs were included.
 
-![alt text](Images/image-3.png)
-
+![alt text](Images/image-3.png)\
 ***Fig. 2.** Resolved Addresses in Wireshark*
 
 From the LAN segment data provided for the exercise, I knew that 172.16.1.4 is the address of a domain controller in the network. The other IP address (172.16.1.66) must have been the host system, a desktop with the hostname DESKTOP-SKBR25F. 
 
 Inspection of the ethernet headers of packets to or from the desktop revealed the MAC address of the device (00:1e:64:ec:f3:08).
 
-![alt text](Images/image.png)
+![alt text](Images/image.png)\
 ***Fig. 3.** Device MAC address obtained from packet header*
 
 I then wanted to try and identify the user.
@@ -56,7 +55,7 @@ To find a user account name, there are a couple of approaches that can be taken 
 
     (kerberos.msg_type == 10) && not (kerberos.CNameString contains "$") && (ip.src == 172.16.1.66)
 
-![alt text](Images/image-2.png)
+![alt text](Images/image-2.png)\
 ***Fig. 4.** Wireshark filter to identify username from Kerberos authentication requests*
 
 At this point, I had significant information on the host system.
@@ -72,19 +71,19 @@ To identify the presence of suspicious traffic, I processed the pcap file in Zui
 
     event_type=="alert" src_ip == 172.16.1.66 | cut ts, pcap_cnt, src_ip, src_port, dest_ip, dest_port, alert.signature, alert.category, alert.severity | sort ts
 
-![alt text](Images/image-4.png)
+![alt text](Images/image-4.png)\
 ***Fig. 5.** Zui query to display alerts for malicious activity*
 
 We can clearly see several instances of critical alerts for malicious activity. Specifically, it appears that an STRRAT (remote access trojan) was present on the system. An STRRAT is a Java-based remote access trojan (RAT) known for credential theft, remote desktop control, and data exfiltration, representing a severe threat. Starting at around 2:40 UTC, the STRRAT sent C2 checkins approximately every 5 seconds to the same destination IP (141.98.10.79). Although not pictured, these checkins repeated all the way until the end of the pcap file.
 
 Packet 9114 was also of some interest. Zui has flagged it as a call to ip-api.com, which is a service that provides the external IP of the system and geolocation data. Following the TCP stream in Wireshark confirmed that the location and IP were obtained in a JSON file.
 
-![alt text](Images/image-5.png)
+![alt text](Images/image-5.png)\
 ***Fig. 6.** Call to ip-api.com to obtain geolocation data and external IP*
 
 This information was then used to set up a TCP connection to the attacker's system. Following the TCP stream for any of the subsequent packets identified by Zui revealed suspicious traffic between the host and the flagged IP.
 
-![alt text](Images/image-6.png)
+![alt text](Images/image-6.png)\
 ***Fig. 7.** TCP stream between host and attacker. The pings contained some encoded substrings (one highlighted as an example).*
 
 Each string started with a prefix indicating STRRAT pings and system information. Additionally, some unreadable substrings were present within each larger string. From the characters used, the lengths being multiples of 4, and the use of padding characters (=) in some instances, my first assumption was that these substrings were Base64 encoded. Once this was confirmed for the first few examples, I processed the file using a [Python script](Script/base64decode.py) to extract and decode all distinct encoded substrings.
@@ -138,7 +137,7 @@ At this point, several indicators of malicious activity on the affected system a
 
     (tls.handshake.type == 1 or tls.record.content_type == 23) && (ip.addr == 172.16.1.66)
 
-![alt text](Images/image-7.png)
+![alt text](Images/image-7.png)\
 ***Fig. 8.** TLS handshakes with Maven followed by large volumes (hundreds of packets) of application data transfers. A similar pattern was observed for Github.*
 
 Scrolling through the filtered packets revealed 2 instances of TLS handshakes followed by numerous packets of application data. The domains accessed were Github and a Maven repo. A check through the conversation statistics in Wireshark also confirmed that these domains were responsible for the largest volumes of data traffic. Additionally, both domains were accessed seconds before the malicious traffic started. 
